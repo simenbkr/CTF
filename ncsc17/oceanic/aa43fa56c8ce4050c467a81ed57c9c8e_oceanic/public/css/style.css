@@ -1,0 +1,18 @@
+.container {
+    margin-top: 10px;
+    width: 350px;
+    text-align: center;
+}
+
+.logo {
+    margin-bottom: 10px;
+    width:305px;
+}
+
+.content {
+    margin-top: 25px;
+}
+
+form > * {
+    margin-top: 10px;
+}
