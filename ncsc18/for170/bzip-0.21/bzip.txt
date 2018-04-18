@@ -1,0 +1,267 @@
+
+BZIP(1)                                                   BZIP(1)
+
+
+NAME
+       bzip, bunzip - a block-sorting file compressor, v0.21
+
+
+SYNOPSIS
+       bzip [ -cdfkvVL123456789 ] [ filenames ...  ]
+       bunzip [ -kvVL ] [ filenames ...  ]
+
+
+DESCRIPTION
+       Bzip  compresses  files  using the Burrows-Wheeler-Fenwick
+       block-sorting text compression algorithm.  Compression  is
+       generally  considerably  better than that achieved by more
+       conventional LZ77/LZ78-based compressors, and  competitive
+       with  all  but  the  best of the PPM family of statistical
+       compressors.
+
+       The command-line options are deliberately very similar  to
+       those of GNU Gzip, but they are not identical.
+
+       Bzip  expects  a list of file names to follow the command-
+       line flags.  Each file is replaced by a compressed version
+       of  itself,  with  the name "original_name.bz".  Each com-
+       pressed file has the same modification  date  and  permis-
+       sions as the corresponding original, so that these proper-
+       ties can be  correctly  restored  at  decompression  time.
+       File  name handling is naive in the sense that there is no
+       mechanism for preserving original file names,  permissions
+       and  dates  in  filesystems  which lack these concepts, or
+       have serious file name length restrictions,  such  as  MS-
+       DOS.
+
+       Bzip  and bunzip will not overwrite existing files; if you
+       want this to happen, you should delete them first.
+
+       If no file names are specified, bzip compresses from stan-
+       dard  input  to  standard output.  In this case, bzip will
+       decline to write compressed output to a terminal, as  this
+       would  be  entirely  incomprehensible and therefore point-
+       less.
+
+       Bunzip (or bzip -d ) decompresses and restores all  speci-
+       fied  files  whose names end in ".bz".  Files without this
+       suffix are ignored.  Again, supplying no filenames  causes
+       decompression from standard input to standard output.
+
+       You can also compress or decompress exactly one named file
+       to the standard output by giving the -c flag.
+
+       Compression is always performed, even  if  the  compressed
+       file  is slightly larger than the original. The worst case
+       expansion is for files of zero  length,  which  expand  to
+       seventeen  bytes.   Random  data  (including the output of
+       most file compressors) is coded  at  about  8.1  bits  per
+       byte, giving an expansion of around 1%.
+
+       As a self-check for your protection, bzip uses 32-bit CRCs
+       to make sure that the decompressed version of  a  file  is
+       identical to the original.  This guards against corruption
+       of the compressed data, and  against  undetected  bugs  in
+       bzip  (hopefully very unlikely).  The chances of data cor-
+       ruption going undetected is microscopic, about one  chance
+       in  four  billion  for  each  file  processed.   Be aware,
+       though, that the check occurs upon  decompression,  so  it
+       can  only tell you that that something is wrong.  It can't
+       help you recover the original uncompressed data.
+
+       Return values: 1 for an abnormal exit, otherwise 0.
+
+
+MEMORY MANAGEMENT
+       Bzip compresses large files in  blocks.   The  block  size
+       affects  both  the  compression  ratio  achieved,  and the
+       amount of memory needed both for  compression  and  decom-
+       pression.   The flags -1 through -9 specify the block size
+       to be 100,000 bytes through 900,000  bytes  (the  default)
+       respectively.   At decompression-time, the block size used
+       for compression is read from the header of the  compressed
+       file,  and bunzip then allocates itself just enough memory
+       to decompress the file.  Since block sizes are  stored  in
+       compressed  files,  it follows that the flags -1 to -9 are
+       irrelevant to and so ignored during  decompression.   Com-
+       pression  and decompression requirements, in bytes, can be
+       estimated as:
+
+             Compression:   300k + ( 8 x block size )
+
+             Decompression: 6 x block size
+
+       The 300k constant is for a frequency-count table, used  in
+       the sorting phase of compression.
+
+       Larger  block  sizes  give  rapidly  diminishing  marginal
+       returns; most of the compression comes from the first  two
+       or  three hundred k of block size, a fact worth bearing in
+       mind when using bzip on small machines.  It is also impor-
+       tant  to appreciate that the decompression memory require-
+       ment is set at compression-time by  the  choice  of  block
+       size.  So, for example, if you are compressing files which
+       you think might possibly be decompressed on  a  4-megabyte
+       machine,  you might want to select a block size of 200k or
+       300k, so the decompressor will draw 1200  kbytes  or  1800
+       kbytes respectively, which is probably the limit of what's
+       comfortable on a 4-meg machine.  In general,  though,  you
+       should  try  and  use  the  largest block size memory con-
+       straints allow.  Compression and  decompression  speed  is
+       virtually unaffected by block size.
+
+       Another  significant point applies to files which fit in a
+       single block -- that  means  most  files  you'd  encounter
+       using  a  large  block  size.   The  amount of real memory
+       touched is proportional to the size of the file, since the
+       file  is smaller than a block.  For example, compressing a
+       file 20,000 bytes long with the flag  -9  will  cause  the
+       compressor to allocate [by the formula, in practice a lit-
+       tle more] 7500k of memory, but only touch 300k + 20000 * 8
+       =  460  kbytes  of  it.   Similarly, the decompressor will
+       allocate 5400k but only touch 20000 * 6 = 120 kbytes.
+
+       Here is a table which summarises the maximum memory  usage
+       for  different  block  sizes.   Also recorded is the total
+       compressed size for 14 files of the Calgary Text  Compres-
+       sion  Corpus totalling 3,141,622 bytes.  This column gives
+       some feel for how  compression  varies  with  block  size.
+       These  figures  tend to understate the advantage of larger
+       block sizes for larger files, since the  Corpus  is  domi-
+       nated by smaller files.
+
+                       Compress   Decompress   Corpus
+                Flag     usage      usage       Size
+
+                 -1      1100k       500k      905958
+                 -2      1900k      1000k      870646
+                 -3      2700k      1500k      853650
+                 -4      3500k      2000k      840140
+                 -5      4300k      2500k      838355
+                 -6      5100k      3000k      831695
+                 -7      5900k      3500k      827104
+                 -8      6700k      4000k      821652
+                 -9      7500k      4500k      821652
+
+
+
+OPTIONS
+       -c     Compress  or  decompress  to  standard  output.  -c
+              requires you to supply exactly one file  name,  and
+              this file is compressed or decompressed to standard
+              out.
+
+       -d     Force decompression.  Bzip and  bunzip  are  really
+              the same program, and the decision about whether to
+              compress or decompress is  done  on  the  basis  of
+              which name is used.  This flag overrides that mech-
+              anism, and forces bzip to decompress.
+
+       -f     The complement to -d: forces  compression,  regard-
+              less of the invokation name.
+
+       -k     Keep  (don't delete) input files during compression
+              or decompression.
+
+       -v     Verbose mode -- show the compression ratio for each
+              file processed.
+
+       -V     Be  very  verbose.  This spews out lots of informa-
+              tion  during  compression  which  is  primarily  of
+              interest for debugging purposes.
+
+       -L     Display  the software license terms and conditions.
+
+       -1 to -9
+              Set the block size to 100 k, 200 k ..  900  k  when
+              compressing.   Has  no  effect  when decompressing.
+              See MEMORY MANAGEMENT above.
+
+
+PERFORMANCE NOTES
+       The sorting phase of compression gathers together  similar
+       strings  in  the  file.  Because of this, files containing
+       very long runs of  repeated  symbols,  like  "aabaabaabaab
+       ..."   (repeated   several  hundred  times)  may  compress
+       extraordinarily slowly.  You can use the -V option to mon-
+       itor progress in great detail, if you want.  Decompression
+       speed is unaffected.  Such pathological cases seem rare in
+       practice.
+
+       Incompressible or virtually-incompressible data may decom-
+       press rather more slowly than one would hope.  This is due
+       to naive implementation of the move-to-front coder, and of
+       the frequency tables for the arithmetic coder.
+
+       Decompression  on  Sun  Sparc  1's  (and  other  low-range
+       Sparcs)  can  be  slow,  because  of  the lack of hardware
+       implementations of integer  multiply  and  divide  in  the
+       SPARC  v7  instruction set.  The situation is much exacer-
+       bated if bzip is compiled for a full SPARC v8  instruction
+       set,  since this causes the machine to trap on each multi-
+       ply and divide instruction.  These traps take  control  to
+       the  relevant software emulation of the offending instruc-
+       tion, but it is much quicker for the  compiler  simply  to
+       plant  a call to the emulation routine.  Moral: be careful
+       how you compile bzip for a  Sparc.   If  you  use  GNU  C,
+       investigate  the effects of the -msupersparc and -mcypress
+       flags.
+
+       Wildcard expansion for Windows 95  and  NT  loses  leading
+       directory   information.    For   example,   the  pathspec
+       "sources\*.c" is searched correctly  for  matching  files,
+       but  the  "sources\" bit is ignored when the files come to
+       be processed, which means bzip won't be able to  find  any
+       of  them.   This is easy to fix; perhaps some enterprising
+       soul will send me a patch?
+
+
+CAVEATS
+       I/O error messages are not as helpful as  they  could  be.
+       Bzip tries hard to detect I/O errors and exit cleanly, but
+       the details of what the problem is sometimes  seem  rather
+       misleading.
+
+       There  is  no  -t  option  to test the integrity of a com-
+       pressed file.  However, Unix folks can do the following:
+
+          bzip -dcV file.bz > /dev/null
+
+       which causes bzip to do a trial decompression of  file.bz,
+       throwing  away  the  result.  You'll be shown the computed
+       and stored CRCs.  If these  are  identical,  the  file  is
+       almost  certainly  OK  -- see the discussion above on CRCs
+       for a definition of "almost certainly".  If  they're  not,
+       bzip  will  complain  loudly.   Note  that file.bz is left
+       unchanged regardless of the outcome.  Win95/NT  folks  can
+       do  the  same, but /dev/null will have to be replaced with
+       something suitable, perhaps NUL.
+
+       This manual page pertains to version 0.21 of bzip.  It may
+       well  happen that some future version will use a different
+       compressed file format.  If you try to  decompress,  using
+       0.21,  a  .bz  file created with some future version which
+       uses a different compressed file format,  0.21  will  com-
+       plain  that  your file "is not a BZIP file".  If that hap-
+       pens, you should obtain a more recent version of bzip  and
+       use that to decompress the file.
+
+
+
+AUTHOR
+       Julian Seward, sewardj@cs.man.ac.uk.
+
+       The  ideas embodied in bzip are due to (at least) the fol-
+       lowing people: Michael Burrows and David Wheeler (for  the
+       block  sorting  transformation),  Peter  Fenwick  (for the
+       structured coding model, and many refinements), and  Alis-
+       tair  Moffat,  Radford Neal and Ian Witten (for the arith-
+       metic coder).  I am much indebted for their help,  support
+       and advice.  See the file ALGORITHMS in the source distri-
+       bution for pointers to sources of  documentation.   Chris-
+       tian  von  Roques encouraged me to look for faster sorting
+       algorithms, so as to speed up  compression.   Many  people
+       sent  patches,  helped  with  portability  problems,  lent
+       machines, gave advice and were generally helpful.
+
+

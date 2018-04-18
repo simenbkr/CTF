@@ -1,0 +1,6 @@
+repo: a6233e87a8de8025b94526212b739ec560d316ee
+node: 68ba278025b5d6e093621492f40c24f77891beb4
+branch: seek-bzip2
+latesttag: null
+latesttagdistance: 8
+changessincelatesttag: 8

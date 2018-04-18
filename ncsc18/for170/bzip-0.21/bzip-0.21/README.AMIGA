@@ -1,0 +1,27 @@
+
+AmigaDOS (2.0+ required!) users:
+
+1.  Conditional compilation sections added to
+    bzip.c so that it will compile with
+	SAS/C++ 6.57.  The _AMIGA define was used
+	for all of these sections.
+
+2.  SCOPTIONS are set for maximum speed on a
+    68030 with stack and break checking.
+ 
+3.  smakefile was been written with an expanded
+    test section so that bzip can be compared
+	against lha and lzx.
+
+4.	Since links are poorly supported on the amiga
+	no consistently successful support was possible.
+	So it is up to you if you want to use a link
+	for bunzip.
+
+5.  It passes the original tests, but that is
+    NO GUARANTEE that the program is reliable.
+
+2 February 1997
+
+ported by:	Richard Perrott
+email:		hcm94rp2@dmu.ac.uk
