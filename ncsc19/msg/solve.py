@@ -8,7 +8,6 @@ def get_p():
     debug = False
 
     if not debug:
-#        return remote('ncsc.ccis.no', 1344)
         return remote('128.39.143.166', 1340)
     else:
         return process(context.binary.path)
